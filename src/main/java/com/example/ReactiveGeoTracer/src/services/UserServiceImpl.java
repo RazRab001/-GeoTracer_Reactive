@@ -20,11 +20,6 @@ public class UserServiceImpl implements IUserService {
 
     @Override
     public Mono<User> createUser(User user) {
-        System.out.println("User id: " + user.getId());
-        System.out.println("User email: " + user.getEmail());
-        System.out.println("User password " + user.getHashedPassword());
-        System.out.println("User active " + user.isActive());
-        System.out.println("User role " + user.getRole());
         return userRepository.save(user);
     }
 

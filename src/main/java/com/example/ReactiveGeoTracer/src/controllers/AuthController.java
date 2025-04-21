@@ -30,15 +30,28 @@ public class AuthController {
 
     @PostMapping("/reg")
     public Mono<ResponseEntity<UserGetDto>> registration(@Valid @RequestBody SignInDto dto) {
+        long startTime = System.currentTimeMillis();
         if (dto.getPassword() == null || dto.getPassword().isEmpty()) {
             return Mono.just(ResponseEntity.badRequest().body(null));
         }
+        System.out.println("Step 1 (User ID check): " + (System.currentTimeMillis() - startTime) + " ms");
 
         String hashedPassword = hashComponent.hash(dto.getPassword());
+        System.out.println("Step 2 (Password hashing): " + (System.currentTimeMillis() - startTime) + " ms");
+
         User user = dto.toUser(hashedPassword);
+        System.out.println("Step 3 (Convert from dto): " + (System.currentTimeMillis() - startTime) + " ms");
 
         return userService.createUser(user)
+                .doOnNext(savedUser -> {
+                    long dbSaveTime = System.currentTimeMillis();
+                    System.out.println("Step 4 (Database save): " + (dbSaveTime - startTime) + " ms");
+                })
                 .map(UserGetDto::new)
+                .doOnNext(userGetDto -> {
+                    long mappingTime = System.currentTimeMillis();
+                    System.out.println("Step 5 (Mapping to UserGetDto): " + (mappingTime - startTime) + " ms");
+                })
                 .map(userGetDto -> ResponseEntity.status(HttpStatus.CREATED).body(userGetDto))
                 .onErrorResume(e -> {
                     System.err.println("Error during registration: " + e.getMessage());
